@@ -18,7 +18,6 @@ An inventory management application. This is my final project for WGS Bootcamp B
   - [Dashboard](#dashboard)
   - [Table](#table)
   - [Print QR Code](#print-qr-code)
-  - [Scan QR Code](#scan-qr-code)
   - [Dark Mode](#dark-mode)
 - [License](#license)
 
@@ -277,7 +276,7 @@ UPDATE users SET role = 'viewer' WHERE email = 'viewer@example.com';
 - **Role-Based Authentication System**: Six distinct user roles (superadmin, admin, operator, user, supplier, viewer) with granular permission control
 - **User Registration**: Self-service registration endpoint for new users
 - **Integrated Bulk QR Code Generator**: Enables the creation of QR codes in bulk for selected items, complete with customization options for resizing and printing
-- **Versatile QR Code Scanner**: Offers the ability to scan QR codes using webcam devices or by uploading images
+<!-- Camera scan feature removed -->
 
 ## Screenshots
 
@@ -293,10 +292,7 @@ UPDATE users SET role = 'viewer' WHERE email = 'viewer@example.com';
 
 ![Print QR](https://user-images.githubusercontent.com/32730327/279402658-b86975e8-857c-46ee-9fa6-0501d59afde6.png)
 
-### Scan QR Code
-
-![Scan QR1](https://user-images.githubusercontent.com/32730327/273454801-d9c2f9e0-5ee1-4708-8283-656e787ce9f2.png)
-![Scan QR2](https://user-images.githubusercontent.com/32730327/273454805-ca0edc90-de09-4def-a2fa-9fa7cfe7dfb0.png)
+<!-- Scan QR section removed: camera scanning is no longer available -->
 
 ### Dark Mode
 

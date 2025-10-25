@@ -23,7 +23,6 @@
     "ejs": "^3.1.10",
     "express": "^4.20.0",
     "express-validator": "^7.0.1",
-    "html5-qrcode": "^2.3.4",
     "jsbarcode": "^3.11.5",
     "method-override": "^3.0.0",
     "moment": "^2.29.4",

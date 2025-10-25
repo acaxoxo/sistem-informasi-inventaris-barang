@@ -153,14 +153,12 @@
           <!-- Modal Header -->
           <div class="modal-header">
             <h4 class="modal-title">Tambah Barang Masuk</h4>
-            <button type="button" class="close" onclick="$('#add').modal('hide');stopScan();">&times;</button>
+            <button type="button" class="close" onclick="$('#add').modal('hide');">&times;</button>
           </div>
           <!-- Modal body -->
           <form action="/barangmasuk" method="post">
             <div class="modal-body">
-              <div class="form-group">
-                <div id="reader"></div>
-              </div>
+              
               <div class="form-group">
                 <label for="barang">Barang</label>
                 <select class="form-control select2bs4" id="barang" name="barang" required>
@@ -181,7 +179,7 @@
             </div>
             <div class="modal-footer">
               <button type="submit" class="btn btn-primary">Simpan</button>
-              <button type="button" class="btn btn-secondary" onclick="$('#add').modal('hide');stopScan();">Tutup</button>
+              <button type="button" class="btn btn-secondary" onclick="$('#add').modal('hide');">Tutup</button>
             </div>
           </form>
         </div>
