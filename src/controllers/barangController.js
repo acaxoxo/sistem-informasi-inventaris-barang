@@ -3,25 +3,13 @@ const fs = require('fs');
 const { body, validationResult } = require('express-validator');
 const moment = require('moment');
 const QRCode = require('qrcode');
-const multer = require('multer');
-const path = require('path');
 // const { createCanvas } = require("canvas");
 // const JsBarcode = require("jsbarcode");
 const stok = require('../queries/stockBarangQuery');
 const bmasuk = require('../queries/barangMasukQuery');
 const bkeluar = require('../queries/barangKeluarQuery');
 
-// Multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, './public/uploads');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({ storage });
+// Image upload removed
 
 // Delete File
 const unlinkAsync = promisify(fs.unlink);
@@ -34,6 +22,36 @@ const getBarang = async (req, res) => {
     const barang = await stok.getBarang();
     res.render('barang', {
       user: req.session.user.email,
+      title: 'Stok Barang',
+      brg: barang,
+      showAdminMenu: true,
+    });
+  } else if (req.session.user && req.session.user.role === 'admin') {
+    const barang = await stok.getBarang();
+    res.render('barang', {
+      user: req.session.user.email,
+      title: 'Stok Barang',
+      brg: barang,
+      showAdminMenu: false,
+    });
+  } else if (req.session.user && req.session.user.role === 'operator') {
+    const barang = await stok.getBarang();
+    res.render('barang', {
+      us: req.session.user.email,
+      title: 'Stok Barang',
+      brg: barang,
+    });
+  } else if (req.session.user && req.session.user.role === 'viewer') {
+    const barang = await stok.getBarang();
+    res.render('barang', {
+      us: req.session.user.email,
+      title: 'Stok Barang',
+      brg: barang,
+    });
+  } else if (req.session.user && req.session.user.role === 'supplier') {
+    const barang = await stok.getBarang();
+    res.render('barang', {
+      us: req.session.user.email,
       title: 'Stok Barang',
       brg: barang,
     });
@@ -63,6 +81,60 @@ const getBarangDetail = async (req, res) => {
       brgm: barangMasuk,
       brgk: barangKeluar,
       moment,
+      showAdminMenu: true,
+    });
+  } else if (req.session.user && req.session.user.role === 'admin') {
+    const barang = await stok.getDetail(req.params.id);
+    const barangMasuk = await bmasuk.getDetailBarang(req.params.id);
+    const barangKeluar = await bkeluar.getDetailBarang(req.params.id);
+
+    res.render('barangDetail', {
+      brg: barang,
+      user: req.session.user.email,
+      title: 'Detail Barang',
+      brgm: barangMasuk,
+      brgk: barangKeluar,
+      moment,
+      showAdminMenu: false,
+    });
+  } else if (req.session.user && req.session.user.role === 'operator') {
+    const barang = await stok.getDetail(req.params.id);
+    const barangMasuk = await bmasuk.getDetailBarang(req.params.id);
+    const barangKeluar = await bkeluar.getDetailBarang(req.params.id);
+
+    res.render('barangDetail', {
+      brg: barang,
+      us: req.session.user.email,
+      title: 'Detail Barang',
+      brgm: barangMasuk,
+      brgk: barangKeluar,
+      moment,
+    });
+  } else if (req.session.user && req.session.user.role === 'viewer') {
+    const barang = await stok.getDetail(req.params.id);
+    const barangMasuk = await bmasuk.getDetailBarang(req.params.id);
+    const barangKeluar = await bkeluar.getDetailBarang(req.params.id);
+
+    res.render('barangDetail', {
+      brg: barang,
+      us: req.session.user.email,
+      title: 'Detail Barang',
+      brgm: barangMasuk,
+      brgk: barangKeluar,
+      moment,
+    });
+  } else if (req.session.user && req.session.user.role === 'supplier') {
+    const barang = await stok.getDetail(req.params.id);
+    const barangMasuk = await bmasuk.getDetailBarang(req.params.id);
+    const barangKeluar = await bkeluar.getDetailBarang(req.params.id);
+
+    res.render('barangDetail', {
+      brg: barang,
+      us: req.session.user.email,
+      title: 'Detail Barang',
+      brgm: barangMasuk,
+      brgk: barangKeluar,
+      moment,
     });
   } else if (req.session.user && req.session.user.role === 'user') {
     const barang = await stok.getDetail(req.params.id);
@@ -84,7 +156,6 @@ const getBarangDetail = async (req, res) => {
 };
 
 const addBarang = [
-  upload.single('image'),
   body('kodebarang').custom(async (value) => {
     const dup = await stok.cekKode(value.toLowerCase());
     if (dup) {
@@ -99,23 +170,12 @@ const addBarang = [
     }
     return true;
   }),
-  body('image').custom(async (value, { req }) => {
-    const maxSize = 1048576;
-    if (req.file.size > maxSize) {
-      throw new Error('Tambah barang gagal: ukuran file melebihi batas 1MB.');
-    }
-    return true;
-  }),
+  // Image removed from flow
   async (req, res) => {
-    if (req.session.user && req.session.user.role === 'superadmin') {
+    if (req.session.user && (req.session.user.role === 'superadmin' || req.session.user.role === 'admin')) {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        const img = req.file.filename;
-
-        const imgPath = `./public/uploads/${img}`;
-        if (fs.existsSync(imgPath)) {
-          await unlinkAsync(imgPath);
-        }
+        // No image cleanup needed
 
         const barang = await stok.getBarang();
 
@@ -129,7 +189,7 @@ const addBarang = [
         const { namabarang } = req.body;
         const { deskripsi } = req.body;
         const { stock } = req.body;
-        const image = req.file.filename;
+        const image = null; // image removed
         const penginput = req.session.user.email;
         const { kodebarang } = req.body;
 
@@ -159,12 +219,7 @@ const addBarang = [
     } else if (req.session.user && req.session.user.role === 'user') {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        const img = req.file.filename;
-
-        const imgPath = `./public/uploads/${img}`;
-        if (fs.existsSync(imgPath)) {
-          await unlinkAsync(imgPath);
-        }
+        // No image cleanup needed
 
         const barang = await stok.getBarang();
 
@@ -178,7 +233,7 @@ const addBarang = [
         const { namabarang } = req.body;
         const { deskripsi } = req.body;
         const { stock } = req.body;
-        const image = req.file.filename;
+        const image = null; // image removed
         const penginput = req.session.user.email;
         const { kodebarang } = req.body;
 
@@ -213,7 +268,6 @@ const addBarang = [
 ];
 
 const updateBarang = [
-  upload.single('image'),
   body('kodebarang').custom(async (value, { req }) => {
     const dup = await stok.checkKodeDuplicate(value.toLowerCase());
     if (value !== req.body.oldKode && dup) {
@@ -228,27 +282,12 @@ const updateBarang = [
     }
     return true;
   }),
-  body('image').custom(async (value, { req }) => {
-    const maxSize = 1048576;
-    if (req.file) {
-      if (req.file.size > maxSize) {
-        throw new Error('Edit barang gagal: ukuran file melebihi batas 1MB.');
-      }
-    }
-    return true;
-  }),
+  // Image removed from flow
   async (req, res) => {
-    if (req.session.user && req.session.user.role === 'superadmin') {
+    if (req.session.user && (req.session.user.role === 'superadmin' || req.session.user.role === 'admin')) {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        if (req.file && req.file.filename) {
-          const img = req.file.filename;
-
-          const imgPath = `./public/uploads/${img}`;
-          if (fs.existsSync(imgPath)) {
-            await unlinkAsync(imgPath);
-          }
-        }
+        // No image cleanup needed
         const barang = await stok.getBarang();
 
         res.render('barang', {
@@ -257,55 +296,11 @@ const updateBarang = [
           brg: barang,
           user: req.session.user.email,
         });
-      } else if (req.file && req.file.filename) {
-        const { namabarang } = req.body;
-        const { deskripsi } = req.body;
-        const { stock } = req.body;
-        const image = req.file.filename;
-        const { kodebarang } = req.body;
-        const { oldKode } = req.body;
-        const { idbarang } = req.body;
-        const img = req.body.image;
-
-        await stok.updateBarang(
-          namabarang,
-          deskripsi,
-          stock,
-          image,
-          kodebarang,
-          idbarang,
-        );
-
-        const imgPath = `./public/uploads/${img}`;
-        if (fs.existsSync(imgPath)) {
-          await unlinkAsync(imgPath);
-        }
-
-        if (kodebarang !== oldKode) {
-          const oldImgPath = `./public/uploads/${oldKode}.png`;
-          if (fs.existsSync(oldImgPath)) {
-            await unlinkAsync(oldImgPath);
-          }
-
-          // JsBarcode(canvas, kodebarang);
-          // const buffer = canvas.toBuffer("image/png");
-          const writeImgPath = `./public/uploads/${kodebarang}.png`;
-          // fs.writeFileSync(writeImgPath, buffer);
-          QRCode.toFile(writeImgPath, kodebarang, (err) => {
-            if (err) {
-              console.err(err);
-              return false;
-            }
-            return true;
-          });
-        }
-
-        res.redirect('/barang');
       } else {
         const { namabarang } = req.body;
         const { deskripsi } = req.body;
         const { stock } = req.body;
-        const { image } = req.body;
+        const image = null;
         const { kodebarang } = req.body;
         const { oldKode } = req.body;
         const { idbarang } = req.body;
@@ -348,15 +343,17 @@ const updateBarang = [
 ];
 
 const deleteBarang = async (req, res) => {
-  if (req.session.user && req.session.user.role === 'superadmin') {
+  if (req.session.user && (req.session.user.role === 'superadmin' || req.session.user.role === 'admin')) {
     const image = await stok.getImage(req.params.id);
     const kode = await stok.getKode(req.params.id);
     await stok.delBarang(req.params.id);
     // await bmasuk.delBarangMasukId(req.params.id);
     // await bkeluar.delBarangKeluarId(req.params.id);
-    const imgPath = `./public/uploads/${image}`;
-    if (fs.existsSync(imgPath)) {
-      await unlinkAsync(imgPath);
+    if (image) {
+      const imgPath = `./public/uploads/${image}`;
+      if (fs.existsSync(imgPath)) {
+        await unlinkAsync(imgPath);
+      }
     }
     const writeImgPath = `./public/uploads/${kode}.png`;
     if (fs.existsSync(writeImgPath)) {

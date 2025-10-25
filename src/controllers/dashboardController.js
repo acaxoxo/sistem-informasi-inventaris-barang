@@ -16,6 +16,60 @@ const getIndex = async (req, res) => {
       totalQtyBM,
       totalQtyBK,
       totalUsers,
+      showAdminMenu: true,
+    });
+  } else if (req.session.user && req.session.user.role === 'admin') {
+    const totalStock = await stok.totalStock();
+    const totalQtyBM = await bmasuk.totalQty();
+    const totalQtyBK = await bkeluar.totalQty();
+    const totalUsers = await user.totalUsers();
+    res.render('index', {
+      user: req.session.user.email,
+      title: 'Dasbor',
+      totalStock,
+      totalQtyBM,
+      totalQtyBK,
+      totalUsers,
+      showAdminMenu: false,
+    });
+  } else if (req.session.user && req.session.user.role === 'operator') {
+    const totalStock = await stok.totalStock();
+    const totalQtyBM = await bmasuk.totalQty();
+    const totalQtyBK = await bkeluar.totalQty();
+    const totalUsers = await user.totalUsers();
+    res.render('index', {
+      us: req.session.user.email,
+      title: 'Dasbor',
+      totalStock,
+      totalQtyBM,
+      totalQtyBK,
+      totalUsers,
+    });
+  } else if (req.session.user && req.session.user.role === 'viewer') {
+    const totalStock = await stok.totalStock();
+    const totalQtyBM = await bmasuk.totalQty();
+    const totalQtyBK = await bkeluar.totalQty();
+    const totalUsers = await user.totalUsers();
+    res.render('index', {
+      us: req.session.user.email,
+      title: 'Dasbor',
+      totalStock,
+      totalQtyBM,
+      totalQtyBK,
+      totalUsers,
+    });
+  } else if (req.session.user && req.session.user.role === 'supplier') {
+    const totalStock = await stok.totalStock();
+    const totalQtyBM = await bmasuk.totalQty();
+    const totalQtyBK = await bkeluar.totalQty();
+    const totalUsers = await user.totalUsers();
+    res.render('index', {
+      us: req.session.user.email,
+      title: 'Dasbor',
+      totalStock,
+      totalQtyBM,
+      totalQtyBK,
+      totalUsers,
     });
   } else if (req.session.user && req.session.user.role === 'user') {
     const totalStock = await stok.totalStock();

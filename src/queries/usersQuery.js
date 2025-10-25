@@ -30,6 +30,18 @@ const email2 = async (userEmail) => {
   return result.rows[0].email;
 };
 
+// Get full user record by case-insensitive email match
+const getUserByEmailLower = async (userEmailLower) => {
+  const query = {
+    text: 'SELECT id, email, password, role FROM public.users WHERE LOWER(email) = $1 LIMIT 1',
+    values: [userEmailLower],
+  };
+
+  const result = await pool.query(query);
+  if (!result.rowCount) return undefined;
+  return result.rows[0];
+};
+
 const password = async (userPassword) => {
   const query = {
     text: 'SELECT password FROM public.users WHERE password = $1',
@@ -203,6 +215,7 @@ const totalUsers = async () => {
 module.exports = {
   email,
   email2,
+  getUserByEmailLower,
   password,
   role,
   getUsers,

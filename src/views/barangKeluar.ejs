@@ -6,10 +6,12 @@
           <div class="col-sm-6">
             <div id="bt" class="float-sm-right">
               <div class="dt-buttons btn-group flex-wrap">
+                <% if (typeof canAddTransactions !== 'undefined' && canAddTransactions === true) { %>
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add">
                   <i class="fas fa-plus"></i>
                   Tambah Barang Keluar
                 </button>
+                <% } %>
               </div>
             </div>
           </div>

@@ -9,8 +9,38 @@ const getAccount = async (req, res) => {
       usr: users,
       user: req.session.user.email,
       title: 'Edit Akun',
+      showAdminMenu: true,
+    });
+  } else if (req.session.user && req.session.user.role === 'admin') {
+    const users = await user.checkProfile(req.session.user.email);
+    res.render('account', {
+      usr: users,
+      user: req.session.user.email,
+      title: 'Edit Akun',
+      showAdminMenu: false,
     });
   } else if (req.session.user && req.session.user.role === 'user') {
+    const users = await user.checkProfile(req.session.user.email);
+    res.render('account', {
+      usr: users,
+      us: req.session.user.email,
+      title: 'Edit Akun',
+    });
+  } else if (req.session.user && req.session.user.role === 'operator') {
+    const users = await user.checkProfile(req.session.user.email);
+    res.render('account', {
+      usr: users,
+      us: req.session.user.email,
+      title: 'Edit Akun',
+    });
+  } else if (req.session.user && req.session.user.role === 'viewer') {
+    const users = await user.checkProfile(req.session.user.email);
+    res.render('account', {
+      usr: users,
+      us: req.session.user.email,
+      title: 'Edit Akun',
+    });
+  } else if (req.session.user && req.session.user.role === 'supplier') {
     const users = await user.checkProfile(req.session.user.email);
     res.render('account', {
       usr: users,
@@ -94,7 +124,7 @@ const changePassword = [
     return true;
   }),
   async (req, res) => {
-    if (req.session.user && req.session.user.role === 'superadmin') {
+    if (req.session.user && (req.session.user.role === 'superadmin' || req.session.user.role === 'admin')) {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         res.render('account', {
@@ -114,7 +144,7 @@ const changePassword = [
           logout: 'Ganti kata sandi berhasil, silahkan masuk kembali.',
         });
       }
-    } else if (req.session.user && req.session.user.role === 'user') {
+    } else if (req.session.user && (req.session.user.role === 'user' || req.session.user.role === 'operator' || req.session.user.role === 'viewer' || req.session.user.role === 'supplier')) {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         res.render('account', {

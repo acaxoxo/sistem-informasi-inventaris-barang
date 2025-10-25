@@ -686,10 +686,10 @@ COPY public.stock (idbarang, namabarang, deskripsi, stock, image, penginput, kod
 --
 
 COPY public.users (id, email, password, role) FROM stdin;
-1	superadmin@email.com	$2b$10$oR6NMsvHQkfFwgswbl/xrukGYH.f1ELuH2IzN.rz1vQABDd5W/VDS	superadmin
-2	user@email.com	$2b$10$vu.wzgu308W0B4my6D5tOOv8Mn1YT0M9jZ0pl1VcfGGi/uyCx596a	user
-3	admin@email.com	$2b$10$1YwPTCyOjRs0nPGwHYwGJ.ya7cRNl9U8ceWehDw7ACB94O/wuHtUe	superadmin
-5	usr@email.com	$2b$10$yPFBMFU3LV3QsSh7wmXJUe5rP3rh3SNTPMbXXQygheS9PeDhUxKuW	user
+1	superadmin@email.com	$2b$10$ShX12oaedeoq/3S1PIiqm.QPzPKeU4a8wHONDX7PAnAsiz1J4JtVe	superadmin
+2	user@email.com	$2b$10$tN7/ZakujFxMF/MWGfQz2.LqpWQEmKX0V/JnLQNFhUahh1RDoV0Cq	user
+3	admin@email.com	$2b$10$8aqj6ZiZzCc.4GB0Z5xtfuKHQB44pnc0M.x.qrBqdoIZnwq1c0HhK	admin
+5	usr@email.com	$2b$10$SC2Qx.OBxVDjV5iCi3EVlOYQwFtPsIz9WawD4MQ./cbO2ZRFffZ9C	user
 \.
 
 

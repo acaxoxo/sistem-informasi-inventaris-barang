@@ -113,7 +113,7 @@
               </li>
             </ul>
           </li>
-          <% if(typeof locals.user != 'undefined') { %>
+          <% if(typeof locals.showAdminMenu != 'undefined' && locals.showAdminMenu === true) { %>
           <li class="nav-item">
             <% if(locals.title == 'Kelola Pengguna') { %>
             <a href="/users" class="nav-link active">
@@ -127,7 +127,7 @@
             </a>
           </li>
           <% } %>
-          <% if(typeof locals.user != 'undefined') { %>
+          <% if(typeof locals.showAdminMenu != 'undefined' && locals.showAdminMenu === true) { %>
           <li class="nav-item">
             <% if(locals.title == 'Log Aplikasi') { %>
             <a href="/log" class="nav-link active">

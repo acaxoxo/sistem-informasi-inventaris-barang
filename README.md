@@ -8,6 +8,11 @@ An inventory management application. This is my final project for WGS Bootcamp B
   - [Prerequisite](#prerequisite)
   - [Installation](#installation)
 - [Running Locally](#running-locally)
+- [Authentication & Login](#authentication--login)
+  - [Default Login Credentials](#default-login-credentials)
+  - [Creating New Users](#creating-new-users)
+  - [User Registration](#user-registration)
+- [Roles & Permissions](#roles--permissions)
 - [Main Features](#main-features)
 - [Screenshots](#screenshots)
   - [Dashboard](#dashboard)
@@ -69,19 +74,210 @@ Make sure your system PATH includes Postgres tools. For Windows, [see instructio
 
 2. Visit [http://localhost:3000](http://localhost:3000) (this may vary depending on the `HOSTNAME` and `PORT` values you set in the `.env` file).
 
-3. Login with the following credentials:
+## Authentication & Login
 
-  | email | password | role |
-  |---|---|---|
-  | superadmin@email.com | superadmin123 | superadmin |
-  | admin@email.com | admin123 | superadmin |
-  | user@email.com | password | user |
-  | usr@email.com | password | user |
+The application uses a role-based authentication system. **All users log in through the same login page** at [http://localhost:3000/login](http://localhost:3000/login). The system automatically determines your permissions based on your account's role in the database.
+
+### How to Login
+
+1. Start the application: `npm start`
+2. Open your browser and go to [http://localhost:3000](http://localhost:3000)
+3. You'll be redirected to the login page
+4. Enter your **email** and **password**
+5. Click "Masuk" (Login)
+6. The system will redirect you to the dashboard with permissions based on your role
+
+**Important:** There is only ONE login page for all users. Your role (superadmin, admin, operator, user, supplier, or viewer) is stored in the database and determines what features you can access after logging in.
+
+### Default Login Credentials
+
+After running the database setup (`npm run setup-db`), you can log in with these default accounts:
+
+| Email | Password | Role | What You'll See After Login |
+|-------|----------|------|----------------------------|
+| superadmin@email.com | superadmin123 | superadmin | Full access: Dashboard, Inventory, Transactions, **Users**, **Logs** |
+| admin@email.com | admin123 | admin | Dashboard, Inventory (full CRUD), Transactions (full CRUD) |
+| user@email.com | password | user | Dashboard, Inventory (view), Transactions (add only) |
+| usr@email.com | password | user | Dashboard, Inventory (view), Transactions (add only) |
+
+**Note:** The default setup doesn't include operator, supplier, or viewer accounts. You need to create them or change an existing user's role (see below).
+
+#### Reset default users without recreating the database (optional)
+
+If your database already exists and you just want to align the default accounts and passwords with the table above, run:
+
+```bash
+npm run reset-default-users
+```
+
+This will upsert these four accounts by email with the documented passwords and roles:
+
+- superadmin@email.com → superadmin123
+- admin@email.com → admin123
+- user@email.com → password
+- usr@email.com → password
+
+No other data is changed.
+
+### Testing Different Roles
+
+To test operator, supplier, or viewer roles, you can change an existing user's role:
+
+```sql
+-- Login to PostgreSQL and connect to your database
+psql -U your_username -d your_database_name
+
+-- Change user@email.com to operator
+UPDATE users SET role = 'operator' WHERE email = 'user@email.com';
+
+-- Or change to supplier
+UPDATE users SET role = 'supplier' WHERE email = 'user@email.com';
+
+-- Or change to viewer
+UPDATE users SET role = 'viewer' WHERE email = 'user@email.com';
+```
+
+Then log in with that email and the same password to see the different permissions!
+
+### Creating New Users
+
+There are two ways to create new users in the system:
+
+#### 1. User Registration (Self Sign-Up)
+
+New users can register themselves through the registration page:
+
+1. Navigate to [http://localhost:3000/register](http://localhost:3000/register)
+2. Enter your email address
+3. Create a password (minimum 6 characters)
+4. Confirm your password
+5. Click "Daftar" (Register)
+
+**Note:** Self-registered users are automatically assigned the `user` role. To assign different roles (admin, operator, supplier, viewer), a superadmin must update the role  in the database.
+
+#### 2. Database Creation (Manual)
+
+Superadmins can also create users directly in PostgreSQL:
+
+```sql
+-- Insert a new user (password is hashed with bcrypt, see example below)
+INSERT INTO users (email, password, role) 
+VALUES ('newuser@example.com', '$2b$10$hashedpasswordhere', 'user');
+```
+
+To hash a password for manual insertion, you can use Node.js:
+
+```javascript
+const bcrypt = require('bcrypt');
+const password = 'yourpassword';
+bcrypt.hash(password, 10).then(hash => console.log(hash));
+```
+
+### User Registration
+
+The system includes a public registration endpoint at `/register` where new users can sign up:
+
+- **URL**: `/register` (GET/POST)
+- **Access**: Public (no login required)
+- **Default Role**: All registered users start with the `user` role
+- **Auto-login**: After successful registration, users are automatically logged in
+
+**To disable public registration**, remove or comment out the registration routes in `src/routes/authRoutes.js`.
+
+## Main Features
+## Roles & Permissions
+
+The application supports six different user roles, each with specific permissions:
+
+### Role Overview
+
+| Role | Inventory View | Inventory Edit | Barang Masuk | Barang Keluar | User Management | Logs |
+|------|----------------|----------------|--------------|---------------|-----------------|------|
+| **Superadmin** | ✅ | ✅ | ✅ Add/Edit/Delete | ✅ Add/Edit/Delete | ✅ | ✅ |
+| **Admin** | ✅ | ✅ | ✅ Add/Edit/Delete | ✅ Add/Edit/Delete | ❌ | ❌ |
+| **Operator** | ✅ | ❌ | ✅ Add only | ✅ Add only | ❌ | ❌ |
+| **User** | ✅ | ❌ | ✅ Add only | ✅ Add only | ❌ | ❌ |
+| **Supplier** | ✅ | ❌ | ✅ Add only | ❌ View only | ❌ | ❌ |
+| **Viewer** | ✅ | ❌ | ❌ View only | ❌ View only | ❌ | ❌ |
+
+### Detailed Role Descriptions
+
+#### 🔴 Superadmin
+- **Full system access**
+- Manage users and view application logs
+- Complete CRUD operations on inventory and transactions
+- Access all features and menus
+
+#### 🟠 Admin
+- **Inventory and transaction management**
+- Full CRUD operations on inventory items (Stok Barang)
+- Full CRUD operations on transactions (Barang Masuk/Keluar)
+- Cannot access User Management or Application Logs
+
+#### 🟡 Operator (Petugas Gudang)
+- **Transaction handling**
+- View inventory and details (read-only)
+- Add new incoming and outgoing transactions
+- Cannot edit/delete transactions
+- Cannot modify inventory master data
+
+#### 🟢 User
+- **Basic transaction access**
+- View inventory and details (read-only)
+- Add new incoming and outgoing transactions
+- Cannot edit/delete transactions
+- Cannot modify inventory master data
+
+#### 🔵 Supplier
+- **Supply management**
+- View inventory (read-only)
+- Add Barang Masuk (incoming stock) only
+- View Barang Keluar but cannot add/edit
+- Cannot modify inventory master data
+
+#### ⚪ Viewer
+- **Read-only access**
+- View inventory, transactions, and details
+- Cannot add, edit, or delete anything
+- Reporting and monitoring purposes only
+
+### Changing User Roles
+
+Assign or change a user's role in PostgreSQL:
+
+```sql
+-- Set a user as superadmin
+UPDATE users SET role = 'superadmin' WHERE email = 'admin@example.com';
+
+-- Set a user as admin
+UPDATE users SET role = 'admin' WHERE email = 'manager@example.com';
+
+-- Set a user as operator (warehouse staff)
+UPDATE users SET role = 'operator' WHERE email = 'staff@example.com';
+
+-- Set a user as user (default role)
+UPDATE users SET role = 'user' WHERE email = 'employee@example.com';
+
+-- Set a user as supplier
+UPDATE users SET role = 'supplier' WHERE email = 'supplier@example.com';
+
+-- Set a user as viewer (read-only)
+UPDATE users SET role = 'viewer' WHERE email = 'viewer@example.com';
+```
+
+### Security Notes
+
+- Passwords are hashed using bcrypt with a salt round of 10
+- Sessions are managed using `cookie-session` middleware
+- All routes check authentication status before granting access
+- Role-based access control is enforced at the controller level
 
 ## Main Features
 
-- **Integrated Bulk QR Code Generator**: Enables the creation of QR codes in bulk for selected items, complete with customization options for resizing and printing.
-- **Versatile QR Code Scanner**: Offers the ability to scan QR codes using webcam devices or by uploading images.
+- **Role-Based Authentication System**: Six distinct user roles (superadmin, admin, operator, user, supplier, viewer) with granular permission control
+- **User Registration**: Self-service registration endpoint for new users
+- **Integrated Bulk QR Code Generator**: Enables the creation of QR codes in bulk for selected items, complete with customization options for resizing and printing
+- **Versatile QR Code Scanner**: Offers the ability to scan QR codes using webcam devices or by uploading images
 
 ## Screenshots
 

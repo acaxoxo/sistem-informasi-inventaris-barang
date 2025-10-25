@@ -12,6 +12,31 @@ const getBarangKeluar = async (req, res) => {
       brgk: barangKeluar,
       moment,
       brg: barang,
+      showAdminMenu: true,
+      canAddTransactions: true,
+    });
+  } else if (req.session.user && req.session.user.role === 'admin') {
+    const barangKeluar = await bkeluar.getBarangK();
+    const barang = await stok.getBarang();
+    res.render('barangKeluar', {
+      user: req.session.user.email,
+      title: 'Barang Keluar',
+      brgk: barangKeluar,
+      moment,
+      brg: barang,
+      showAdminMenu: false,
+      canAddTransactions: true,
+    });
+  } else if (req.session.user && req.session.user.role === 'operator') {
+    const barangKeluar = await bkeluar.getBarangK();
+    const barang = await stok.getBarang();
+    res.render('barangKeluar', {
+      us: req.session.user.email,
+      title: 'Barang Keluar',
+      brgk: barangKeluar,
+      moment,
+      brg: barang,
+      canAddTransactions: true,
     });
   } else if (req.session.user && req.session.user.role === 'user') {
     const barangKeluar = await bkeluar.getBarangK();
@@ -22,6 +47,29 @@ const getBarangKeluar = async (req, res) => {
       brgk: barangKeluar,
       moment,
       brg: barang,
+      canAddTransactions: true,
+    });
+  } else if (req.session.user && req.session.user.role === 'viewer') {
+    const barangKeluar = await bkeluar.getBarangK();
+    const barang = await stok.getBarang();
+    res.render('barangKeluar', {
+      us: req.session.user.email,
+      title: 'Barang Keluar',
+      brgk: barangKeluar,
+      moment,
+      brg: barang,
+      canAddTransactions: false,
+    });
+  } else if (req.session.user && req.session.user.role === 'supplier') {
+    const barangKeluar = await bkeluar.getBarangK();
+    const barang = await stok.getBarang();
+    res.render('barangKeluar', {
+      us: req.session.user.email,
+      title: 'Barang Keluar',
+      brgk: barangKeluar,
+      moment,
+      brg: barang,
+      canAddTransactions: false,
     });
   } else {
     res.status(401);
@@ -30,7 +78,7 @@ const getBarangKeluar = async (req, res) => {
 };
 
 const addBarangKeluar = async (req, res) => {
-  if (req.session.user && req.session.user.role === 'superadmin') {
+  if (req.session.user && (req.session.user.role === 'superadmin' || req.session.user.role === 'admin')) {
     const idbarang = req.body.barang;
     const { penerima } = req.body;
     const { qty } = req.body;
@@ -65,7 +113,7 @@ const addBarangKeluar = async (req, res) => {
 
       res.redirect('/barangkeluar');
     }
-  } else if (req.session.user && req.session.user.role === 'user') {
+  } else if (req.session.user && (req.session.user.role === 'user' || req.session.user.role === 'operator')) {
     const idbarang = req.body.barang;
     const { penerima } = req.body;
     const { qty } = req.body;
@@ -107,7 +155,7 @@ const addBarangKeluar = async (req, res) => {
 };
 
 const updateBarangKeluar = async (req, res) => {
-  if (req.session.user && req.session.user.role === 'superadmin') {
+  if (req.session.user && (req.session.user.role === 'superadmin' || req.session.user.role === 'admin')) {
     const { idbarang } = req.body;
     const { penerima } = req.body;
     const { qty } = req.body;
