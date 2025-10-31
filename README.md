@@ -2,6 +2,23 @@
 
 An inventory management application. This is my final project for WGS Bootcamp Batch 4.
 
+## 📖 Documentation
+
+For a comprehensive explanation of the system architecture, workflow scenarios, and detailed business logic, see:
+
+**[📄 SKENARIO_SISTEM.md](./SKENARIO_SISTEM.md)** - Complete system scenario documentation in Indonesian, including:
+- Authentication and registration flow
+- Role-based access control details
+- Master data management workflow
+- Transaction processing (incoming/outgoing)
+- User management and logging
+- End-to-end usage scenarios for all roles
+- Security and validation mechanisms
+
+This document provides the narrative context needed to understand how all components work together.
+
+---
+
 ## Table of Contents
 
 - [First Time Setup](#first-time-setup)
@@ -277,6 +294,300 @@ UPDATE users SET role = 'viewer' WHERE email = 'viewer@example.com';
 - **User Registration**: Self-service registration endpoint for new users
 - **Integrated Bulk QR Code Generator**: Enables the creation of QR codes in bulk for selected items, complete with customization options for resizing and printing
 <!-- Camera scan feature removed -->
+
+## Database Schema & ERD
+
+This section explains the database structure, entities, attributes, and relationships to help you create an Entity-Relationship Diagram (ERD).
+
+### Database Overview
+
+The system uses **PostgreSQL** as the database management system. The database consists of 5 main tables:
+- `users` - User accounts and authentication
+- `stock` - Master data for inventory items
+- `masuk` - Incoming transaction records
+- `keluar` - Outgoing transaction records
+- `log` - HTTP activity logs
+
+### Entities and Attributes
+
+#### 1. Users (Authentication & Authorization)
+
+**Table name:** `users`
+
+| Attribute | Type | Constraints | Description |
+|-----------|------|-------------|-------------|
+| id | INTEGER | PRIMARY KEY, AUTO INCREMENT | Unique user identifier |
+| email | TEXT | NOT NULL, UNIQUE | User's email address (login username) |
+| password | TEXT | NOT NULL | Bcrypt-hashed password (salt round 10) |
+| role | TEXT | NOT NULL | User role: 'superadmin', 'admin', 'operator', 'user', 'supplier', 'viewer' |
+
+**Business Rules:**
+- Email must be unique and valid
+- Password is never stored in plaintext (bcrypt hashing)
+- Role determines access permissions throughout the system
+- Default role for self-registration is 'user'
+
+**Notes:**
+- Supplier is NOT a separate entity; it's identified by `role = 'supplier'` in the users table
+- Same applies to other roles (operator, viewer, etc.)
+
+---
+
+#### 2. Stock (Master Inventory Data)
+
+**Table name:** `stock`
+
+| Attribute | Type | Constraints | Description |
+|-----------|------|-------------|-------------|
+| idbarang | INTEGER | PRIMARY KEY, AUTO INCREMENT | Unique item identifier |
+| namabarang | TEXT | NOT NULL | Item name |
+| deskripsi | TEXT | | Item description |
+| stock | INTEGER | NOT NULL, DEFAULT 0 | Current stock quantity |
+| image | TEXT | | Image filename (deprecated, not used in current version) |
+| penginput | TEXT | | Email of user who created this item (soft FK → users.email) |
+| kodebarang | TEXT | UNIQUE (recommended) | Unique item code for identification and QR generation |
+
+**Business Rules:**
+- `stock` should never be negative (enforced by transaction logic)
+- `kodebarang` should be unique to avoid conflicts
+- `penginput` stores the email of the creator (soft foreign key)
+
+**Notes:**
+- `image` column exists in schema but is no longer used (image upload feature removed)
+- QR codes are generated dynamically from `kodebarang`
+
+---
+
+#### 3. Masuk (Incoming Transactions)
+
+**Table name:** `masuk`
+
+| Attribute | Type | Constraints | Description |
+|-----------|------|-------------|-------------|
+| idmasuk | INTEGER | PRIMARY KEY, AUTO INCREMENT | Unique transaction identifier |
+| idbarang | INTEGER | FK (logical) → stock.idbarang | Reference to inventory item |
+| tanggal | TIMESTAMP WITH TIME ZONE | DEFAULT CURRENT_TIMESTAMP | Transaction date and time |
+| keterangan | TEXT | NOT NULL | Notes about the transaction (source, reason, etc.) |
+| qty | INTEGER | NOT NULL, > 0 | Quantity of items received |
+| namabarang_m | TEXT | | Snapshot of item name at transaction time |
+| penginput | TEXT | | Email of user who recorded this transaction (soft FK → users.email) |
+| kodebarang_m | TEXT | | Snapshot of item code at transaction time |
+
+**Business Rules:**
+- `qty` must be positive (> 0)
+- When a transaction is created, `stock.stock` is increased by `qty`
+- When a transaction is edited, stock is adjusted by the difference (new qty - old qty)
+- When a transaction is deleted, `stock.stock` is decreased by `qty`
+- Snapshots (`namabarang_m`, `kodebarang_m`) preserve historical data even if master item changes
+
+**Notes:**
+- Foreign key constraint is logical (not enforced by database) but managed by application
+- Snapshots ensure audit trail remains accurate
+
+---
+
+#### 4. Keluar (Outgoing Transactions)
+
+**Table name:** `keluar`
+
+| Attribute | Type | Constraints | Description |
+|-----------|------|-------------|-------------|
+| idkeluar | INTEGER | PRIMARY KEY, AUTO INCREMENT | Unique transaction identifier |
+| idbarang | INTEGER | FK (logical) → stock.idbarang | Reference to inventory item |
+| tanggal | TIMESTAMP WITH TIME ZONE | DEFAULT CURRENT_TIMESTAMP | Transaction date and time |
+| penerima | TEXT | NOT NULL | Recipient name or department |
+| qty | INTEGER | NOT NULL, > 0 | Quantity of items issued |
+| namabarang_k | TEXT | | Snapshot of item name at transaction time |
+| penginput | TEXT | | Email of user who recorded this transaction (soft FK → users.email) |
+| kodebarang_k | TEXT | | Snapshot of item code at transaction time |
+
+**Business Rules:**
+- `qty` must be positive (> 0)
+- Before creating a transaction, system validates that `stock.stock >= qty`
+- When a transaction is created, `stock.stock` is decreased by `qty`
+- When a transaction is edited, stock is adjusted by the difference (old qty - new qty)
+- When a transaction is deleted, `stock.stock` is increased by `qty`
+- Cannot create outgoing transaction if stock is insufficient
+
+**Notes:**
+- Same snapshot mechanism as `masuk` for historical integrity
+- Stock validation prevents negative inventory
+
+---
+
+#### 5. Log (HTTP Activity Logs)
+
+**Table name:** `log`
+
+| Attribute | Type | Constraints | Description |
+|-----------|------|-------------|-------------|
+| idlog | INTEGER | PRIMARY KEY, AUTO INCREMENT | Unique log identifier |
+| date | TIMESTAMP WITH TIME ZONE | DEFAULT CURRENT_TIMESTAMP | Request timestamp |
+| usr | TEXT | | Email of user who made the request (soft FK → users.email) |
+| method | TEXT | | HTTP method (GET, POST, PUT, DELETE) |
+| endpoint | TEXT | | URL path accessed |
+| status_code | TEXT | | HTTP response status code (200, 302, 404, 500, etc.) |
+
+**Business Rules:**
+- Logs are append-only (no edit/delete through UI)
+- Only Superadmin can view logs
+- Used for audit trail and debugging
+
+**Notes:**
+- `usr` can be null for unauthenticated requests (like viewing login page)
+- Logged automatically by morgan middleware
+
+---
+
+### Relationships and Cardinality
+
+#### Relationship Diagram (Textual)
+
+```
+Users (1) ──────< (N) Stock
+  └─ via stock.penginput (soft FK to users.email)
+
+Users (1) ──────< (N) Masuk
+  └─ via masuk.penginput (soft FK to users.email)
+
+Users (1) ──────< (N) Keluar
+  └─ via keluar.penginput (soft FK to users.email)
+
+Users (1) ──────< (N) Log
+  └─ via log.usr (soft FK to users.email)
+
+Stock (1) ──────< (N) Masuk
+  └─ via masuk.idbarang (logical FK to stock.idbarang)
+
+Stock (1) ──────< (N) Keluar
+  └─ via keluar.idbarang (logical FK to stock.idbarang)
+```
+
+#### Detailed Relationships
+
+1. **Users → Stock (One-to-Many)**
+   - One user can create many inventory items
+   - Relationship field: `stock.penginput` → `users.email`
+   - Type: Soft foreign key (no database constraint)
+   - Business rule: When viewing stock, system can show who created each item
+
+2. **Users → Masuk (One-to-Many)**
+   - One user can record many incoming transactions
+   - Relationship field: `masuk.penginput` → `users.email`
+   - Type: Soft foreign key
+   - Business rule: System tracks who recorded each incoming transaction
+
+3. **Users → Keluar (One-to-Many)**
+   - One user can record many outgoing transactions
+   - Relationship field: `keluar.penginput` → `users.email`
+   - Type: Soft foreign key
+   - Business rule: System tracks who recorded each outgoing transaction
+
+4. **Users → Log (One-to-Many)**
+   - One user can generate many log entries
+   - Relationship field: `log.usr` → `users.email`
+   - Type: Soft foreign key (can be NULL for anonymous requests)
+   - Business rule: Superadmin can track all activities by user
+
+5. **Stock → Masuk (One-to-Many)**
+   - One inventory item can have many incoming transactions
+   - Relationship field: `masuk.idbarang` → `stock.idbarang`
+   - Type: Logical foreign key (not enforced by database constraint)
+   - Business rule: Each incoming transaction increases the stock of the referenced item
+   - **Cardinality:** 1 Stock : 0..N Masuk (an item can have zero or more incoming transactions)
+
+6. **Stock → Keluar (One-to-Many)**
+   - One inventory item can have many outgoing transactions
+   - Relationship field: `keluar.idbarang` → `stock.idbarang`
+   - Type: Logical foreign key (not enforced by database constraint)
+   - Business rule: Each outgoing transaction decreases the stock of the referenced item
+   - **Cardinality:** 1 Stock : 0..N Keluar (an item can have zero or more outgoing transactions)
+
+---
+
+### Why Soft Foreign Keys?
+
+The system uses **soft foreign keys** (storing email or ID as text without database constraints) for the following reasons:
+
+1. **Flexibility:** Easier to handle edge cases like user deletion without cascading issues
+2. **Historical Integrity:** Even if a user is deleted, their `penginput` email remains in historical records
+3. **Legacy Design:** Original schema was designed this way; adding constraints requires migration
+
+**Recommended Improvement for ERD:**
+- Show these as proper foreign key relationships in your ERD
+- Add a note that they are "logical/soft FKs managed by application"
+- Consider suggesting explicit FK constraints as future enhancement:
+  ```sql
+  ALTER TABLE stock ADD CONSTRAINT fk_stock_penginput 
+    FOREIGN KEY (penginput) REFERENCES users(email) ON DELETE SET NULL;
+  
+  ALTER TABLE masuk ADD CONSTRAINT fk_masuk_idbarang 
+    FOREIGN KEY (idbarang) REFERENCES stock(idbarang) ON DELETE CASCADE;
+  
+  ALTER TABLE masuk ADD CONSTRAINT fk_masuk_penginput 
+    FOREIGN KEY (penginput) REFERENCES users(email) ON DELETE SET NULL;
+  
+  -- Similar for keluar and log tables
+  ```
+
+---
+
+### ERD Summary for Your Diagram
+
+**Entities (5):**
+1. **Users** - PK: id, Attributes: email (UK), password, role
+2. **Stock** - PK: idbarang, Attributes: namabarang, deskripsi, stock, kodebarang (UK), penginput
+3. **Masuk** - PK: idmasuk, FKs: idbarang, penginput, Attributes: tanggal, qty, keterangan, snapshots
+4. **Keluar** - PK: idkeluar, FKs: idbarang, penginput, Attributes: tanggal, qty, penerima, snapshots
+5. **Log** - PK: idlog, FK: usr, Attributes: date, method, endpoint, status_code
+
+**Relationships (6):**
+- Users (1) → (N) Stock via penginput
+- Users (1) → (N) Masuk via penginput
+- Users (1) → (N) Keluar via penginput
+- Users (1) → (N) Log via usr
+- Stock (1) → (N) Masuk via idbarang
+- Stock (1) → (N) Keluar via idbarang
+
+**Key Constraints to Show:**
+- Users.email: UNIQUE
+- Stock.kodebarang: UNIQUE (recommended)
+- All FKs should be drawn with proper crow's foot notation (1:N)
+- All timestamps: DEFAULT CURRENT_TIMESTAMP
+- All qty fields: > 0 (check constraint)
+- Stock.stock: >= 0 (business rule enforced by application)
+
+**Additional Notes for ERD:**
+- Mark `penginput` fields as "soft FK" with dashed lines or annotation
+- Show snapshots (`namabarang_m/k`, `kodebarang_m/k`) as separate attributes
+- Indicate that `image` in Stock is deprecated
+- Use different colors/shapes for different entity types (user management, inventory, transactions, logs)
+
+---
+
+### Example ERD Scenario
+
+**Use Case: Supplier adds incoming transaction**
+
+1. Supplier (role='supplier') in `users` table logs in
+2. Supplier creates a new record in `masuk` table:
+   - `idbarang` = 5 (references existing item in `stock`)
+   - `penginput` = 'supplier@email.com' (from session)
+   - `qty` = 10
+   - `namabarang_m`, `kodebarang_m` = snapshot from `stock` where `idbarang=5`
+3. System updates `stock` table:
+   - `UPDATE stock SET stock = stock + 10 WHERE idbarang = 5`
+4. System logs the request in `log` table:
+   - `usr` = 'supplier@email.com'
+   - `method` = 'POST'
+   - `endpoint` = '/barangmasuk'
+   - `status_code` = '302'
+
+This single transaction involves 4 tables (users, stock, masuk, log) and demonstrates the interconnected nature of the system.
+
+---
+
+For a detailed narrative explanation of how the system works end-to-end, see [SKENARIO_SISTEM.md](./SKENARIO_SISTEM.md).
 
 ## Screenshots
 
