@@ -2,7 +2,6 @@ const { promisify } = require('util');
 const fs = require('fs');
 const { body, validationResult } = require('express-validator');
 const moment = require('moment');
-const QRCode = require('qrcode');
 // const { createCanvas } = require("canvas");
 // const JsBarcode = require("jsbarcode");
 const stok = require('../queries/stockBarangQuery');
@@ -202,23 +201,6 @@ const addBarang = [
           kodebarang,
         );
 
-        // JsBarcode(canvas, kodebarang);
-        // const buffer = canvas.toBuffer("image/png");
-        const writeImgPath = `./public/uploads/${kodebarang}.png`;
-        // fs.writeFileSync(writeImgPath, buffer);
-        QRCode.toFile(writeImgPath, kodebarang, (err) => {
-          if (err) {
-            console.err(err);
-            return false;
-          }
-          return true;
-        });
-
-        res.redirect('/barang');
-      }
-    } else if (req.session.user && req.session.user.role === 'user') {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
         // No image cleanup needed
 
         const barang = await stok.getBarang();
@@ -246,17 +228,7 @@ const addBarang = [
           kodebarang,
         );
 
-        // JsBarcode(canvas, kodebarang);
-        // const buffer = canvas.toBuffer("image/png");
-        const writeImgPath = `./public/uploads/${kodebarang}.png`;
-        // fs.writeFileSync(writeImgPath, buffer);
-        QRCode.toFile(writeImgPath, kodebarang, (err) => {
-          if (err) {
-            console.err(err);
-            return false;
-          }
-          return true;
-        });
+        // QR code generation removed
 
         res.redirect('/barang');
       }
@@ -320,17 +292,7 @@ const updateBarang = [
             await unlinkAsync(oldImgPath);
           }
 
-          // JsBarcode(canvas, kodebarang);
-          // const buffer = canvas.toBuffer("image/png");
-          const writeImgPath = `./public/uploads/${kodebarang}.png`;
-          // fs.writeFileSync(writeImgPath, buffer);
-          QRCode.toFile(writeImgPath, kodebarang, (err) => {
-            if (err) {
-              console.err(err);
-              return false;
-            }
-            return true;
-          });
+          // QR code regeneration removed
         }
 
         res.redirect('/barang');
@@ -355,10 +317,7 @@ const deleteBarang = async (req, res) => {
         await unlinkAsync(imgPath);
       }
     }
-    const writeImgPath = `./public/uploads/${kode}.png`;
-    if (fs.existsSync(writeImgPath)) {
-      await unlinkAsync(writeImgPath);
-    }
+      // QR PNG cleanup removed
     res.redirect('/barang');
   } else {
     res.status(401);

@@ -34,7 +34,6 @@ This document provides the narrative context needed to understand how all compon
 - [Screenshots](#screenshots)
   - [Dashboard](#dashboard)
   - [Table](#table)
-  - [Print QR Code](#print-qr-code)
   - [Dark Mode](#dark-mode)
 - [License](#license)
 
@@ -292,8 +291,7 @@ UPDATE users SET role = 'viewer' WHERE email = 'viewer@example.com';
 
 - **Role-Based Authentication System**: Six distinct user roles (superadmin, admin, operator, user, supplier, viewer) with granular permission control
 - **User Registration**: Self-service registration endpoint for new users
-- **Integrated Bulk QR Code Generator**: Enables the creation of QR codes in bulk for selected items, complete with customization options for resizing and printing
-<!-- Camera scan feature removed -->
+<!-- QR features removed (QR generation and scanning are no longer available) -->
 
 ## Database Schema & ERD
 
@@ -345,7 +343,7 @@ The system uses **PostgreSQL** as the database management system. The database c
 | stock | INTEGER | NOT NULL, DEFAULT 0 | Current stock quantity |
 | image | TEXT | | Image filename (deprecated, not used in current version) |
 | penginput | TEXT | | Email of user who created this item (soft FK → users.email) |
-| kodebarang | TEXT | UNIQUE (recommended) | Unique item code for identification and QR generation |
+| kodebarang | TEXT | UNIQUE (recommended) | Unique item code for identification |
 
 **Business Rules:**
 - `stock` should never be negative (enforced by transaction logic)
@@ -354,7 +352,7 @@ The system uses **PostgreSQL** as the database management system. The database c
 
 **Notes:**
 - `image` column exists in schema but is no longer used (image upload feature removed)
-- QR codes are generated dynamically from `kodebarang`
+<!-- QR code generation removed -->
 
 ---
 
@@ -599,11 +597,7 @@ For a detailed narrative explanation of how the system works end-to-end, see [SK
 
 ![Table](https://user-images.githubusercontent.com/32730327/273454711-420e7794-6de7-4a96-bd93-51c745c4e983.png)
 
-### Print QR Code
-
-![Print QR](https://user-images.githubusercontent.com/32730327/279402658-b86975e8-857c-46ee-9fa6-0501d59afde6.png)
-
-<!-- Scan QR section removed: camera scanning is no longer available -->
+<!-- QR printing and scanning sections removed: QR features are no longer available -->
 
 ### Dark Mode
 
