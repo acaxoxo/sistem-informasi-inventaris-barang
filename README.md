@@ -6,6 +6,7 @@ Aplikasi manajemen inventaris berbasis web dengan sistem role-based access contr
 
 Untuk penjelasan detail tentang arsitektur sistem, workflow, dan business logic, lihat:
 - **[SKENARIO_SISTEM.md](./SKENARIO_SISTEM.md)** - Dokumentasi lengkap dalam Bahasa Indonesia
+- **[PRESENTATION_GUIDE.md](./PRESENTATION_GUIDE.md)** - Panduan presentasi & demo
 
 ---
 
