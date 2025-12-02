@@ -148,35 +148,53 @@ Sistem mendukung 6 role berbeda dengan permission yang spesifik:
 - Role-based access control di setiap endpoint
 - Input validation dengan `express-validator`
 
----## Database Schema
+---
 
-### Tabel Utama (5):
+## Database Schema
+
+### Tabel Utama (6):
 
 1. **users** - Autentikasi & otorisasi
    - `id` (PK), `email` (UNIQUE), `password` (bcrypt), `role`
 
-2. **stock** - Master data barang
-   - `idbarang` (PK), `namabarang`, `deskripsi`, `stock`, `kodebarang` (UNIQUE), `penginput`
+2. **kategori** - Kategori barang ⭐ NEW
+   - `idkategori` (PK), `namakategori`, `deskripsi`
+   - Default: Elektronik, Furniture, ATK, Konsumsi, Lainnya
 
-3. **masuk** - Transaksi barang masuk
+3. **stock** - Master data barang
+   - `idbarang` (PK), `namabarang`, `deskripsi`, `stock`, `kodebarang` (UNIQUE), `penginput`
+   - ⭐ **NEW**: `idkategori` (FK), `satuan`, `harga_beli`, `harga_jual`, `min_stock`
+
+4. **masuk** - Transaksi barang masuk
    - `idmasuk` (PK), `idbarang` (FK), `tanggal`, `qty`, `keterangan`, `penginput`
    - Snapshot: `namabarang_m`, `kodebarang_m`
 
-4. **keluar** - Transaksi barang keluar
+5. **keluar** - Transaksi barang keluar
    - `idkeluar` (PK), `idbarang` (FK), `tanggal`, `qty`, `penerima`, `penginput`
    - Snapshot: `namabarang_k`, `kodebarang_k`
 
-5. **log** - HTTP activity logs
+6. **log** - HTTP activity logs
    - `idlog` (PK), `date`, `usr`, `method`, `endpoint`, `status_code`
 
 ### Relasi:
 
 - Users (1) → (N) Stock, Masuk, Keluar, Log
+- Kategori (1) → (N) Stock ⭐ NEW
 - Stock (1) → (N) Masuk, Keluar
+
+### Fitur Baru:
+
+- ✅ **Kategori Barang**: Pengelompokan barang (Elektronik, Furniture, dll)
+- ✅ **Satuan**: Unit measurement (pcs, box, kg, liter, dll)
+- ✅ **Harga**: Tracking harga beli/jual untuk profit analysis
+- ✅ **Min Stock Alert**: Notifikasi stok menipis
+- ✅ **Export Excel**: Download data ke .xlsx
 
 **Catatan**: Sistem menggunakan soft foreign keys (email/ID sebagai text) untuk fleksibilitas. Snapshot mechanism menjaga integritas data historis.
 
-Untuk ERD lengkap dan business rules, lihat [SKENARIO_SISTEM.md](./SKENARIO_SISTEM.md).
+Untuk ERD lengkap, business rules, dan detail fitur baru, lihat:
+- [SKENARIO_SISTEM.md](./SKENARIO_SISTEM.md) - Dokumentasi teknis lengkap
+- [FITUR_BARU.md](./FITUR_BARU.md) - Detail implementasi fitur baru
 
 ---
 
@@ -188,6 +206,7 @@ Untuk ERD lengkap dan business rules, lihat [SKENARIO_SISTEM.md](./SKENARIO_SIST
 - bcrypt (Password hashing)
 - cookie-session (Session management)
 - express-validator (Input validation)
+- xlsx ⭐ (Excel export)
 
 **Frontend:**
 - AdminLTE (Bootstrap 4)

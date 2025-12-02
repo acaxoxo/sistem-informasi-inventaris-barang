@@ -59,11 +59,31 @@ Panduan lengkap untuk mempresentasikan sistem inventaris barang dalam laporan at
 - Audit trail lengkap
 - Monitoring aktivitas user
 
+#### g. Kategori Barang ⭐ NEW
+- 5 kategori default (Elektronik, Furniture, ATK, Konsumsi, Lainnya)
+- Pengelompokan barang terstruktur
+- Filter & laporan per kategori
+
+#### h. Harga & Profit Tracking ⭐ NEW
+- Harga beli & harga jual
+- Profit margin analysis
+- Nilai inventaris total
+
+#### i. Minimum Stock Alert ⭐ NEW
+- Alert stok menipis
+- Restock reminder
+- Inventory planning
+
+#### j. Export to Excel ⭐ NEW
+- Download data ke .xlsx
+- Laporan untuk atasan/auditor
+- Backup data
+
 ---
 
 ## 🗂️ Struktur Database (ERD)
 
-### Entitas (5 Tabel):
+### Entitas (6 Tabel):
 
 ```
 ┌─────────────────┐
@@ -76,20 +96,34 @@ Panduan lengkap untuk mempresentasikan sistem inventaris barang dalam laporan at
 └────────┬────────┘
          │
          │ (1:N)
-         ├──────────────────────────────┐
-         │                              │
+         ├────────────────────────────────────┐
+         │                                    │
          ▼                              ▼
 ┌─────────────────┐            ┌─────────────────┐
-│     STOCK       │            │     MASUK       │
+│   KATEGORI ⭐   │            │     MASUK       │
 ├─────────────────┤            ├─────────────────┤
-│ PK idbarang     │◄───┐       │ PK idmasuk      │
-│    namabarang   │    │       │ FK idbarang     │
-│    deskripsi    │    │ (1:N) │    tanggal      │
-│    stock        │    │       │    qty          │
-│    kodebarang   │    │       │    keterangan   │
-│    penginput    │    │       │    penginput    │
-└─────────────────┘    │       │    (snapshots)  │
-         │             │       └─────────────────┘
+│ PK idkategori   │            │ PK idmasuk      │
+│    namakategori │            │ FK idbarang     │
+│    deskripsi    │            │    tanggal      │
+└────────┬────────┘            │    qty          │
+         │                     │    keterangan   │
+         │ (1:N)               │    penginput    │
+         ▼                     │    (snapshots)  │
+┌─────────────────┐            └─────────────────┘
+│     STOCK       │
+├─────────────────┤
+│ PK idbarang     │◄───┐
+│    namabarang   │    │
+│    deskripsi    │    │ (1:N)
+│    stock        │    │
+│    kodebarang   │    │
+│    penginput    │    │
+│ FK idkategori ⭐│    │
+│    satuan ⭐    │    │
+│    harga_beli ⭐│    │
+│    harga_jual ⭐│    │
+│    min_stock ⭐ │    │
+└─────────────────┘    │
          │             │
          │ (1:N)       │
          ▼             │
@@ -117,6 +151,7 @@ Panduan lengkap untuk mempresentasikan sistem inventaris barang dalam laporan at
 
 ### Relasi Penting:
 - **Users → Stock/Masuk/Keluar** (1:N) via `penginput`
+- **Kategori → Stock** (1:N) via `idkategori` ⭐ NEW
 - **Stock → Masuk/Keluar** (1:N) via `idbarang`
 - **Soft Foreign Key**: Menggunakan email/ID tanpa constraint DB untuk fleksibilitas
 - **Snapshot Mechanism**: `namabarang_m/k`, `kodebarang_m/k` untuk integritas historis

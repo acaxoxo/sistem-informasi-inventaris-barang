@@ -4,6 +4,8 @@
 
 Sistem Informasi Inventaris Barang adalah aplikasi berbasis web yang dirancang untuk mengelola data persediaan barang, transaksi barang masuk dan keluar, serta pencatatan aktivitas pengguna. Sistem ini menggunakan arsitektur Model-View-Controller (MVC) dengan Node.js sebagai backend, Express.js sebagai framework web, PostgreSQL sebagai database, dan EJS sebagai template engine untuk rendering halaman. Sistem menerapkan konsep role-based access control (RBAC) yang membagi pengguna ke dalam enam peran berbeda: Superadmin, Admin, Operator, User, Supplier, dan Viewer, di mana setiap peran memiliki hak akses yang berbeda terhadap fitur-fitur dalam sistem.
 
+Sistem dilengkapi dengan fitur-fitur modern untuk manajemen inventaris yang efisien, termasuk kategorisasi barang, tracking harga beli/jual untuk analisis profit, alert minimum stock untuk mencegah kehabisan stok, dan export data ke Excel untuk pelaporan. Database dirancang dengan 6 tabel utama (users, kategori, stock, masuk, keluar, log) dengan relasi yang terstruktur namun tetap fleksibel menggunakan soft foreign keys.
+
 ## Alur Autentikasi dan Registrasi
 
 Ketika pengguna pertama kali mengakses sistem, mereka akan diarahkan ke halaman login yang merupakan titik masuk tunggal untuk semua peran pengguna. Sistem tidak membedakan portal login berdasarkan peran; semua pengguna—baik Superadmin, Admin, Operator, User, Supplier, maupun Viewer—menggunakan halaman login yang sama di endpoint `/login`. Pada halaman ini, pengguna diminta memasukkan alamat email dan kata sandi mereka. Sistem melakukan normalisasi email dengan mengubahnya menjadi huruf kecil (lowercase) dan menghapus spasi, sehingga proses login tidak sensitif terhadap penggunaan huruf besar atau spasi yang tidak disengaja.
