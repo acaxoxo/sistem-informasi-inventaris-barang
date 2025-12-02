@@ -15,6 +15,7 @@ const barangRoutes = require('./routes/barangRoutes');
 const barangMasukRoutes = require('./routes/barangMasukRoutes');
 const barangKeluarRoutes = require('./routes/barangKeluarRoutes');
 const logRoutes = require('./routes/logRoutes');
+const exportRoutes = require('./routes/exportRoutes');
 
 const app = express();
 
@@ -71,6 +72,7 @@ app.use(barangRoutes);
 app.use(barangMasukRoutes);
 app.use(barangKeluarRoutes);
 app.use(logRoutes);
+app.use(exportRoutes);
 
 app.get('*', (req, res) => {
   res.status(404).render('404', { title: '404 Error' });

@@ -19,8 +19,20 @@ Panduan lengkap untuk mempresentasikan sistem inventaris barang dalam laporan at
 
 #### a. Autentikasi & Role-Based Access Control (RBAC)
 - **6 Role Berbeda**: Superadmin, Admin, Operator, User, Supplier, Viewer
-- **Single Login Portal**: Semua user login di satu tempat
-- **Security**: Password hashing dengan bcrypt, session management
+- **Single Login Portal**: Semua user login di satu tempat (`/login`)
+- **Case-Insensitive Login**: Email tidak membedakan huruf besar/kecil
+- **Security**: Password hashing bcrypt (salt 10), session management
+- **Auto-Login**: Session tersimpan otomatis setelah login
+
+**Detail Permission per Role:**
+| Role | Barang | Masuk | Keluar | Users | Logs |
+|------|--------|-------|--------|-------|------|
+| **Superadmin** | ✅ CRUD | ✅ CRUD | ✅ CRUD | ✅ Full | ✅ View |
+| **Admin** | ✅ CRUD | ✅ CRUD | ✅ CRUD | ❌ | ❌ |
+| **Operator** | 👁️ View | ➕ Add | ➕ Add | ❌ | ❌ |
+| **User** | 👁️ View | ➕ Add | ➕ Add | ❌ | ❌ |
+| **Supplier** | 👁️ View | ➕ Add | ❌ | ❌ | ❌ |
+| **Viewer** | 👁️ View | 👁️ View | 👁️ View | ❌ | ❌ |
 
 #### b. Master Data Barang
 - CRUD lengkap untuk Superadmin/Admin
@@ -115,39 +127,80 @@ Panduan lengkap untuk mempresentasikan sistem inventaris barang dalam laporan at
 
 ### Skenario 1: Supplier Menambah Barang Masuk
 
-**Setup Awal:**
-1. Superadmin sudah membuat barang "Laptop Dell" dengan kode "DELL001", stok awal = 0
-2. Superadmin sudah set role user `supplier@email.com` = 'supplier'
+**Role:** Supplier - Hanya bisa menambah barang masuk, tidak bisa keluar
 
 **Flow Presentasi:**
 ```
 1. Login sebagai Supplier
+   URL: http://localhost:3000/login
    Email: supplier@email.com
    Password: password
    
 2. Dashboard Supplier
-   ✓ Lihat statistik barang
-   ✓ Menu: Dashboard, Stok Barang, Barang Masuk (NO Barang Keluar untuk supplier)
-   ✗ Tidak ada menu Users & Logs
+   ✓ Lihat statistik: Total Barang, Barang Masuk, Barang Keluar
+   ✓ Menu tersedia: Dashboard, Stok Barang, Barang Masuk
+   ✗ Menu TIDAK ada: Barang Keluar, Users, Logs
    
-3. Klik "Barang Masuk"
+3. Klik "Stok Barang"
+   ✓ Tampil tabel semua barang (read-only)
+   ✗ TIDAK ada tombol "Tambah Barang" (hanya Superadmin/Admin)
+   ✓ Supplier cuma bisa lihat data
+   
+4. Klik "Barang Masuk"
    ✓ Tampil tabel transaksi historis
    ✓ Ada tombol "Tambah Barang Masuk"
    
-4. Tambah Transaksi
-   - Pilih barang: DELL001 - Laptop Dell
+5. Tambah Transaksi
+   - Klik "Tambah Barang Masuk"
+   - Pilih barang: DELL001 - Laptop Dell (stok saat ini: 0)
    - Qty: 10
    - Keterangan: "Pengadaan dari PT. XYZ"
    - Submit
    
-5. Hasil
+6. Hasil
    ✓ Transaksi tersimpan di tabel `masuk`
    ✓ Stok barang berubah: 0 → 10
    ✓ Log tercatat: supplier@email.com POST /barangmasuk [302]
    ✗ Supplier TIDAK bisa edit/delete transaksi
+   ✗ Supplier TIDAK bisa akses menu "Barang Keluar"
 ```
 
-### Skenario 2: Admin Mengeluarkan Barang
+### Skenario 2: Operator Menambah Barang Keluar
+
+**Role:** Operator - Bisa tambah masuk/keluar, tidak bisa edit/delete
+
+**Flow Presentasi:**
+```
+1. Login sebagai Operator
+   Email: operator@email.com
+   Password: password
+   
+2. Dashboard Operator
+   ✓ Lihat statistik lengkap
+   ✓ Menu: Dashboard, Stok Barang, Barang Masuk, Barang Keluar
+   ✗ Tidak ada Users & Logs
+   
+3. Klik "Barang Keluar"
+   ✓ Tampil tabel transaksi keluar
+   ✓ Ada tombol "Tambah Barang Keluar"
+   ✗ TIDAK ada tombol Edit/Delete (berbeda dengan Admin)
+   
+4. Tambah Transaksi Keluar
+   - Pilih barang: DELL001 - Laptop Dell (stok: 10)
+   - Qty: 3
+   - Penerima: "PT. ABC untuk project X"
+   - Submit
+   
+5. Hasil
+   ✓ Transaksi tersimpan di tabel `keluar`
+   ✓ Stok barang berubah: 10 → 7
+   ✓ Log tercatat: operator@email.com POST /barangkeluar [302]
+   ✗ Operator TIDAK bisa edit/delete transaksi yang sudah dibuat
+```
+
+### Skenario 3: Admin Mengedit Master Data & Transaksi
+
+**Role:** Admin - Full CRUD barang & transaksi (tanpa Users/Logs)
 
 **Flow Presentasi:**
 ```
@@ -160,47 +213,77 @@ Panduan lengkap untuk mempresentasikan sistem inventaris barang dalam laporan at
    ✓ Menu: Dashboard, Stok, Barang Masuk, Barang Keluar, Account
    ✗ Tidak ada Users & Logs (beda dengan Superadmin)
    
-3. Klik "Barang Keluar"
-   ✓ Tampil tabel transaksi keluar
-   ✓ Ada tombol "Tambah Barang Keluar"
-   
-4. Tambah Transaksi Keluar
-   - Pilih barang: DELL001 - Laptop Dell (stok saat ini: 10)
-   - Qty: 3
-   - Penerima: "PT. ABC untuk project X"
+3. Edit Master Data Barang
+   - Klik "Stok Barang"
+   ✓ Ada tombol "Tambah Barang"
+   - Klik Edit pada barang DELL001
+   - Ubah stok manual: 7 → 15
    - Submit
+   ✓ Stok berubah di database
    
-5. Backend Validation
-   ✓ Cek: stock (10) >= qty (3)? YES
-   ✓ Proses transaksi
+4. Edit Transaksi Barang Keluar
+   - Klik "Barang Keluar"
+   ✓ Ada tombol Edit & Delete di setiap row
+   - Klik Edit pada transaksi terakhir
+   - Ubah qty: 3 → 5
+   - Submit
+   ✓ Stok otomatis adjust: 15 → 13 (selisih -2)
    
-6. Hasil
-   ✓ Transaksi tersimpan di tabel `keluar`
-   ✓ Stok barang berubah: 10 → 7
-   ✓ Log tercatat: admin@email.com POST /barangkeluar [302]
-   ✓ Admin BISA edit/delete transaksi
+5. Delete Transaksi
+   - Klik Delete pada transaksi
+   - Konfirmasi hapus
+   ✓ Transaksi terhapus
+   ✓ Stok kembali: 13 → 18 (qty 5 dikembalikan)
 ```
 
-### Skenario 3: Validasi Stok Tidak Cukup
+### Skenario 4: Viewer Monitoring (Read-Only)
+
+**Role:** Viewer - Hanya bisa lihat, tidak ada aksi apapun
+
+**Flow Presentasi:**
+```
+1. Login sebagai Viewer
+   Email: viewer@email.com
+   Password: password
+   
+2. Dashboard Viewer
+   ✓ Lihat statistik barang (read-only)
+   ✓ Menu: Dashboard, Stok Barang, Barang Masuk, Barang Keluar
+   
+3. Cek Semua Halaman
+   - Stok Barang: ✓ Lihat tabel ✗ TIDAK ada tombol tambah/edit/delete
+   - Barang Masuk: ✓ Lihat tabel ✗ TIDAK ada tombol tambah/edit/delete
+   - Barang Keluar: ✓ Lihat tabel ✗ TIDAK ada tombol tambah/edit/delete
+   
+4. Use Case Viewer
+   ✓ Manager yang cuma perlu monitoring
+   ✓ Auditor yang cek data tanpa mengubah
+   ✓ Generate laporan untuk atasan
+```
+
+### Skenario 5: Validasi Stok Tidak Cukup
 
 **Flow Presentasi:**
 ```
 1. Admin coba tambah transaksi keluar
-   - Pilih barang: DELL001 (stok: 7)
-   - Qty: 20 (LEBIH DARI STOK!)
+   - Pilih barang: DELL001 (stok: 18)
+   - Qty: 25 (LEBIH DARI STOK!)
    - Penerima: "Customer"
    - Submit
    
 2. Backend Validation
-   ✗ Cek: stock (7) >= qty (20)? NO
+   ✗ Cek: stock (18) >= qty (25)? NO
    
 3. Hasil
    ✗ Error: "Stok tidak mencukupi"
    ✗ TIDAK ada perubahan di database
-   ✓ Stok tetap: 7
+   ✓ Stok tetap: 18
+   ✓ Transaksi ditolak
 ```
 
-### Skenario 4: Superadmin Monitoring Aktivitas
+### Skenario 6: Superadmin Monitoring Aktivitas
+
+**Role:** Superadmin - Full access termasuk Users & Logs
 
 **Flow Presentasi:**
 ```
@@ -208,18 +291,26 @@ Panduan lengkap untuk mempresentasikan sistem inventaris barang dalam laporan at
    Email: superadmin@email.com
    Password: superadmin123
    
-2. Akses Menu "Logs"
+2. Akses Menu "Kelola Pengguna"
+   ✓ Hanya Superadmin yang bisa akses
+   ✓ Lihat semua user (6 users)
+   ✓ Edit role user (misal: ubah user jadi admin)
+   ✓ Reset password user
+   
+3. Akses Menu "Log Aplikasi"
    ✓ Hanya Superadmin yang bisa akses
    
-3. Lihat Activity Log
-   - supplier@email.com POST /barangmasuk [302] - 2025-11-25 10:30
-   - admin@email.com POST /barangkeluar [302] - 2025-11-25 10:45
-   - admin@email.com POST /barangkeluar [400] - 2025-11-25 10:50 (yang gagal)
+4. Lihat Activity Log
+   - supplier@email.com POST /barangmasuk [302] - 2025-12-02 10:30
+   - operator@email.com POST /barangkeluar [302] - 2025-12-02 10:45
+   - admin@email.com PUT /barang/1 [302] - 2025-12-02 11:00
+   - admin@email.com POST /barangkeluar [400] - 2025-12-02 11:15 (yang gagal)
    
-4. Benefit
+5. Benefit
    ✓ Audit trail lengkap
    ✓ Tracking siapa melakukan apa dan kapan
-   ✓ Debugging error
+   ✓ Debugging error (status code 400/500)
+   ✓ Security monitoring
 ```
 
 ---
@@ -351,10 +442,16 @@ Dari project ini, saya mempelajari:
 Sebelum presentasi/demo, pastikan:
 
 - [ ] Database sudah di-setup (`npm run setup-db`)
-- [ ] Default users sudah tersedia dan password benar
+- [ ] Default users sudah tersedia dan password benar:
+  - `superadmin@email.com` / `superadmin123`
+  - `admin@email.com` / `admin123`
+  - `operator@email.com` / `password`
+  - `user@email.com` / `password`
+  - `supplier@email.com` / `password`
+  - `viewer@email.com` / `password`
 - [ ] Aplikasi berjalan di `localhost:3000`
 - [ ] Prepare data dummy untuk demo (minimal 3-5 barang)
-- [ ] Test semua role sebelumnya
+- [ ] Test semua role sebelumnya (6 roles total)
 - [ ] Screenshot siap (Dashboard, Table, Transactions)
 - [ ] Browser dalam keadaan clean (clear cache/cookies)
 

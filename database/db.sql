@@ -40,6 +40,41 @@ CREATE TABLE public.keluar (
 ALTER TABLE public.keluar OWNER TO postgres;
 
 --
+-- Name: kategori; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.kategori (
+    idkategori integer NOT NULL,
+    namakategori text NOT NULL,
+    deskripsi text
+);
+
+
+ALTER TABLE public.kategori OWNER TO postgres;
+
+--
+-- Name: kategori_idkategori_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.kategori_idkategori_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.kategori_idkategori_seq OWNER TO postgres;
+
+--
+-- Name: kategori_idkategori_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.kategori_idkategori_seq OWNED BY public.kategori.idkategori;
+
+
+--
 -- Name: keluar_idkeluar_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -150,7 +185,12 @@ CREATE TABLE public.stock (
     stock integer,
     image text,
     penginput text,
-    kodebarang text
+    kodebarang text,
+    idkategori integer,
+    satuan text DEFAULT 'pcs'::text,
+    harga_beli numeric(15,2) DEFAULT 0,
+    harga_jual numeric(15,2) DEFAULT 0,
+    min_stock integer DEFAULT 5
 );
 
 
@@ -219,6 +259,13 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 --
 
 ALTER TABLE ONLY public.keluar ALTER COLUMN idkeluar SET DEFAULT nextval('public.keluar_idkeluar_seq'::regclass);
+
+
+--
+-- Name: kategori idkategori; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kategori ALTER COLUMN idkategori SET DEFAULT nextval('public.kategori_idkategori_seq'::regclass);
 
 
 --
@@ -667,17 +714,30 @@ COPY public.masuk (idmasuk, idbarang, tanggal, keterangan, qty, namabarang_m, pe
 
 
 --
+-- Data for Name: kategori; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.kategori (idkategori, namakategori, deskripsi) FROM stdin;
+1	Elektronik	Barang elektronik seperti laptop, handphone, dll
+2	Furniture	Meja, kursi, lemari, dll
+3	ATK	Alat tulis kantor
+4	Konsumsi	Makanan dan minuman
+5	Lainnya	Kategori lainnya
+\.
+
+
+--
 -- Data for Name: stock; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.stock (idbarang, namabarang, deskripsi, stock, image, penginput, kodebarang) FROM stdin;
-2	Asus ROG Zephyrus Duo 16	Laptop gaming dengan layar kedua.	1	1674064027186.png	user@gmail.com	ACDB1452
-3	Apple MacBook Pro M1 Max 16	Laptop apple.	1	1674064184226.jpeg	user@gmail.com	ACVE3142
-4	Acer Predator Triton 300 SE	Laptop gaming layar 14 inci.	5	1674064230911.jpg	user@gmail.com	VWVE1425
-5	iPhone 14 Pro Max	Handphone apple.	3	1674064267657.jpg	user@gmail.com	VWEE2311
-7	Realme 10 Pro Plus	Handphone realme.	3	1674078966925.jpg	admin@gmail.com	RLMXP8042
-6	Alienware 34 Curved QD OLED Monitor	Monitor gaming.	1	1674078883777.png	admin@gmail.com	ALCM3917
-1	Asus ROG FLOW Z13	Laptop gaming 2-in-1.	0	1674063981511.png	user@gmail.com	ADDE1324
+COPY public.stock (idbarang, namabarang, deskripsi, stock, image, penginput, kodebarang, idkategori, satuan, harga_beli, harga_jual, min_stock) FROM stdin;
+2	Asus ROG Zephyrus Duo 16	Laptop gaming dengan layar kedua.	1	1674064027186.png	user@gmail.com	ACDB1452	1	pcs	25000000	28000000	2
+3	Apple MacBook Pro M1 Max 16	Laptop apple.	1	1674064184226.jpeg	user@gmail.com	ACVE3142	1	pcs	35000000	40000000	2
+4	Acer Predator Triton 300 SE	Laptop gaming layar 14 inci.	5	1674064230911.jpg	user@gmail.com	VWVE1425	1	pcs	18000000	21000000	3
+5	iPhone 14 Pro Max	Handphone apple.	3	1674064267657.jpg	user@gmail.com	VWEE2311	1	pcs	15000000	18000000	5
+7	Realme 10 Pro Plus	Handphone realme.	3	1674078966925.jpg	admin@gmail.com	RLMXP8042	1	pcs	4500000	5500000	10
+6	Alienware 34 Curved QD OLED Monitor	Monitor gaming.	1	1674078883777.png	admin@gmail.com	ALCM3917	1	pcs	12000000	14000000	2
+1	Asus ROG FLOW Z13	Laptop gaming 2-in-1.	0	1674063981511.png	user@gmail.com	ADDE1324	1	pcs	20000000	23000000	2
 \.
 
 
@@ -690,6 +750,9 @@ COPY public.users (id, email, password, role) FROM stdin;
 2	user@email.com	$2b$10$tN7/ZakujFxMF/MWGfQz2.LqpWQEmKX0V/JnLQNFhUahh1RDoV0Cq	user
 3	admin@email.com	$2b$10$8aqj6ZiZzCc.4GB0Z5xtfuKHQB44pnc0M.x.qrBqdoIZnwq1c0HhK	admin
 5	usr@email.com	$2b$10$SC2Qx.OBxVDjV5iCi3EVlOYQwFtPsIz9WawD4MQ./cbO2ZRFffZ9C	user
+6	operator@email.com	$2b$10$5gHxH0xH3xH4xH5xH6xH7uJ8K9L0M1N2O3P4Q5R6S7T8U9V0W1X2Y	operator
+7	supplier@email.com	$2b$10$5gHxH0xH3xH4xH5xH6xH7uJ8K9L0M1N2O3P4Q5R6S7T8U9V0W1X2Y	supplier
+8	viewer@email.com	$2b$10$5gHxH0xH3xH4xH5xH6xH7uJ8K9L0M1N2O3P4Q5R6S7T8U9V0W1X2Y	viewer
 \.
 
 
@@ -698,6 +761,13 @@ COPY public.users (id, email, password, role) FROM stdin;
 --
 
 SELECT pg_catalog.setval('public.keluar_idkeluar_seq', 3, true);
+
+
+--
+-- Name: kategori_idkategori_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.kategori_idkategori_seq', 5, true);
 
 
 --
@@ -737,6 +807,14 @@ ALTER TABLE ONLY public.keluar
 
 
 --
+-- Name: kategori kategori_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kategori
+    ADD CONSTRAINT kategori_pkey PRIMARY KEY (idkategori);
+
+
+--
 -- Name: log log_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -767,6 +845,17 @@ ALTER TABLE ONLY public.stock
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
+
+--
+-- Note: Soft foreign key relationships (not enforced by database):
+-- stock.idkategori -> kategori.idkategori (many-to-one)
+-- stock.penginput -> users.email (many-to-one)
+-- masuk.idbarang -> stock.idbarang (many-to-one)
+-- masuk.penginput -> users.email (many-to-one)
+-- keluar.idbarang -> stock.idbarang (many-to-one)
+-- keluar.penginput -> users.email (many-to-one)
+-- log.usr -> users.email (many-to-one)
+--
 
 --
 -- PostgreSQL database dump complete

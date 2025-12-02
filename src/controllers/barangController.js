@@ -201,35 +201,7 @@ const addBarang = [
           kodebarang,
         );
 
-        // No image cleanup needed
-
-        const barang = await stok.getBarang();
-
-        res.render('barang', {
-          title: 'Stok Barang',
-          errors: errors.array(),
-          us: req.session.user.email,
-          brg: barang,
-        });
-      } else {
-        const { namabarang } = req.body;
-        const { deskripsi } = req.body;
-        const { stock } = req.body;
-        const image = null; // image removed
-        const penginput = req.session.user.email;
-        const { kodebarang } = req.body;
-
-        await stok.addBarang(
-          namabarang,
-          deskripsi,
-          stock,
-          image,
-          penginput,
-          kodebarang,
-        );
-
-        // QR code generation removed
-
+        // After successful add, redirect to list
         res.redirect('/barang');
       }
     } else {
@@ -307,7 +279,6 @@ const updateBarang = [
 const deleteBarang = async (req, res) => {
   if (req.session.user && (req.session.user.role === 'superadmin' || req.session.user.role === 'admin')) {
     const image = await stok.getImage(req.params.id);
-    const kode = await stok.getKode(req.params.id);
     await stok.delBarang(req.params.id);
     // await bmasuk.delBarangMasukId(req.params.id);
     // await bkeluar.delBarangKeluarId(req.params.id);
@@ -317,7 +288,7 @@ const deleteBarang = async (req, res) => {
         await unlinkAsync(imgPath);
       }
     }
-      // QR PNG cleanup removed
+    // QR PNG cleanup removed
     res.redirect('/barang');
   } else {
     res.status(401);

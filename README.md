@@ -61,15 +61,31 @@ Akses aplikasi di [http://localhost:3000](http://localhost:3000)
 
 ## Login & Autentikasi
 
+### Cara Login
+
+1. Akses aplikasi di [http://localhost:3000](http://localhost:3000)
+2. Klik **"Masuk"** atau langsung ke `/login`
+3. Masukkan **email** dan **password**
+4. Sistem akan otomatis mengarahkan ke dashboard sesuai role Anda
+
+**Catatan:**
+- Login **case-insensitive** (tidak membedakan huruf besar/kecil)
+- Semua role login di portal yang sama
+- Session otomatis tersimpan (auto-login)
+- Password di-hash dengan bcrypt (salt round 10)
+
 ### Default Credentials
 
-Setelah `npm run setup-db`, gunakan akun berikut:
+Setelah `npm run setup-db`, gunakan akun berikut untuk testing:
 
-| Email | Password | Role | Akses |
-|-------|----------|------|-------|
-| superadmin@email.com | superadmin123 | Superadmin | Full access (termasuk Users & Logs) |
-| admin@email.com | admin123 | Admin | CRUD Barang & Transaksi |
-| user@email.com | password | User | View Barang, Add Transaksi |
+| Email | Password | Role | Akses & Permission |
+|-------|----------|------|-------------------|
+| superadmin@email.com | superadmin123 | Superadmin | ✅ Full access: CRUD Barang, Transaksi, Users, Logs |
+| admin@email.com | admin123 | Admin | ✅ CRUD Barang & Transaksi (tanpa Users & Logs) |
+| operator@email.com | password | Operator | 👁️ View Barang, ➕ Add Masuk/Keluar (no edit/delete) |
+| user@email.com | password | User | 👁️ View Barang, ➕ Add Masuk/Keluar (no edit/delete) |
+| supplier@email.com | password | Supplier | 👁️ View Barang, ➕ Add Masuk Only (no Keluar) |
+| viewer@email.com | password | Viewer | 👁️ View Only (Read-only, no transactions) |
 
 ### Reset Password Default (Opsional)
 
@@ -83,14 +99,24 @@ npm run reset-default-users
 
 User baru bisa mendaftar di `/register` dengan role default **User**. Untuk mengubah role:
 
+1. **Via Superadmin** (Recommended):
+   - Login sebagai Superadmin
+   - Menu "Kelola Pengguna"
+   - Edit user dan pilih role baru
+
+2. **Via Database** (Manual):
 ```sql
 -- Login ke PostgreSQL
-psql -U username -d database_name
+psql -U postgres -d inventaris
 
 -- Ubah role user
 UPDATE users SET role = 'admin' WHERE email = 'user@example.com';
 -- Role available: superadmin, admin, operator, user, supplier, viewer
 ```
+
+### Logout
+
+Klik **ikon user** di pojok kanan atas → **"Keluar"** atau langsung ke `/logout`
 
 ---
 
