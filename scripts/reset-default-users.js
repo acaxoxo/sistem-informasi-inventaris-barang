@@ -11,6 +11,9 @@ const bcrypt = require('bcrypt');
 const USERS = [
   { email: 'superadmin@email.com', password: 'superadmin123', role: 'superadmin' },
   { email: 'admin@email.com', password: 'admin123', role: 'admin' },
+  { email: 'operator@email.com', password: 'operator123', role: 'operator' },
+  { email: 'supplier@email.com', password: 'supplier123', role: 'supplier' },
+  { email: 'viewer@email.com', password: 'viewer123', role: 'viewer' },
   { email: 'user@email.com', password: 'password', role: 'user' },
   { email: 'usr@email.com', password: 'password', role: 'user' },
 ];

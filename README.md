@@ -82,10 +82,10 @@ Setelah `npm run setup-db`, gunakan akun berikut untuk testing:
 |-------|----------|------|-------------------|
 | superadmin@email.com | superadmin123 | Superadmin | ✅ Full access: CRUD Barang, Transaksi, Users, Logs |
 | admin@email.com | admin123 | Admin | ✅ CRUD Barang & Transaksi (tanpa Users & Logs) |
-| operator@email.com | password | Operator | 👁️ View Barang, ➕ Add Masuk/Keluar (no edit/delete) |
+| operator@email.com | operator123 | Operator | 👁️ View Barang, ➕ Add Masuk/Keluar (no edit/delete) |
 | user@email.com | password | User | 👁️ View Barang, ➕ Add Masuk/Keluar (no edit/delete) |
-| supplier@email.com | password | Supplier | 👁️ View Barang, ➕ Add Masuk Only (no Keluar) |
-| viewer@email.com | password | Viewer | 👁️ View Only (Read-only, no transactions) |
+| supplier@email.com | supplier123 | Supplier | 👁️ View Barang, ➕ Add Masuk Only (no Keluar) |
+| viewer@email.com | viewer123 | Viewer | 👁️ View Only (Read-only, no transactions) |
 
 ### Reset Password Default (Opsional)
 
